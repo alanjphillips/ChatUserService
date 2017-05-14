@@ -1,7 +1,8 @@
 package com.alaphi.chatuserservice
 
 import akka.http.scaladsl.model.StatusCodes._
-import akka.http.scaladsl.server.Directives.{as, complete, entity, onComplete, path, post}
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.PathMatchers.Segment
 import akka.http.scaladsl.server.StandardRoute
 import de.heikoseeberger.akkahttpcirce.CirceSupport._
 import io.circe.generic.auto._
@@ -12,6 +13,7 @@ class UserRoutes(userService: UserService) {
 
   val successHandler: PartialFunction[Any, StandardRoute] = {
     case Success(user: User) => complete(OK -> user)
+    case Success(b: Boolean) => complete(OK -> b)
   }
 
   val failureHandler: PartialFunction[Any, StandardRoute] = {
@@ -25,7 +27,21 @@ class UserRoutes(userService: UserService) {
           onComplete(userService.create(userCreation))(successHandler orElse failureHandler)
         }
       }
-    }
+    } ~
+      path("users" / Segment) { username =>
+        get(onComplete(userService.read(username))(successHandler orElse failureHandler))
+      } ~
+      path("users" / Segment) { username =>
+        put {
+          entity(as[User]) { user =>
+            onComplete(userService.update(username, user))(successHandler orElse failureHandler)
+          }
+        }
+      } ~
+      path("users" / Segment) { username =>
+        delete(onComplete(userService.delete(username))(successHandler orElse failureHandler))
+      }
+
   }
 
 }

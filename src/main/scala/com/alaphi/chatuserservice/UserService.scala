@@ -7,11 +7,32 @@ class UserService(implicit ec: ExecutionContext) {
   def create(userCreation: UserCreation): Future[User] = {
     Future.successful(
       User(
-        number = (userCreation.forename + userCreation.surname).hashCode.toString,
         username = userCreation.username,
         forename = userCreation.forename,
         surname = userCreation.surname
       )
+    )
+  }
+
+  def read(username: String): Future[User] = {
+    Future.successful(
+      User(
+        username = "JJJJr",
+        forename = "Joey",
+        surname = "JoeJoe"
+      )
+    )
+  }
+
+  def update(username: String, user: User): Future[User] = {
+    Future.successful(
+      user
+    )
+  }
+
+  def delete(username: String): Future[Boolean] = {
+    Future.successful(
+      true
     )
   }
 
