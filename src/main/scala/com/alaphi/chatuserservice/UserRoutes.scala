@@ -8,7 +8,7 @@ import io.circe.generic.auto._
 
 import scala.util.{Failure, Success}
 
-class UserRoutes(accountService: UserService) {
+class UserRoutes(userService: UserService) {
 
   val successHandler: PartialFunction[Any, StandardRoute] = {
     case Success(user: User) => complete(OK -> user)
@@ -21,8 +21,8 @@ class UserRoutes(accountService: UserService) {
   val routes = {
     path("users") {
       post {
-        entity(as[UserCreation]) { accountCreation =>
-          onComplete(accountService.create(accountCreation))(successHandler orElse failureHandler)
+        entity(as[UserCreation]) { userCreation =>
+          onComplete(userService.create(userCreation))(successHandler orElse failureHandler)
         }
       }
     }
@@ -31,6 +31,6 @@ class UserRoutes(accountService: UserService) {
 }
 
 object UserRoutes {
-  def apply(accountService: UserService): UserRoutes = new UserRoutes(accountService)
+  def apply(userService: UserService): UserRoutes = new UserRoutes(userService)
 }
 
