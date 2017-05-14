@@ -12,8 +12,13 @@ import scala.util.{Failure, Success}
 class UserRoutes(userService: UserService) {
 
   val successHandler: PartialFunction[Any, StandardRoute] = {
-    case Success(user: User) => complete(OK -> user)
-    case Success(b: Boolean) => complete(OK -> b)
+    case Success(Right(user: User)) => complete(OK -> user)
+    case Success(true)              => complete(OK -> true)
+  }
+
+  val userOpFailureHandler: PartialFunction[Any, StandardRoute] = {
+    case Success(Left(uof: UserOperationFailure)) => complete(BadRequest -> uof)
+    case Success(false)                           => complete(BadRequest -> false)
   }
 
   val failureHandler: PartialFunction[Any, StandardRoute] = {
@@ -24,22 +29,22 @@ class UserRoutes(userService: UserService) {
     path("users") {
       post {
         entity(as[UserCreation]) { userCreation =>
-          onComplete(userService.create(userCreation))(successHandler orElse failureHandler)
+          onComplete(userService.create(userCreation))(successHandler orElse userOpFailureHandler orElse failureHandler)
         }
       }
     } ~
       path("users" / Segment) { username =>
-        get(onComplete(userService.read(username))(successHandler orElse failureHandler))
+        get(onComplete(userService.read(username))(successHandler orElse userOpFailureHandler orElse failureHandler))
       } ~
       path("users" / Segment) { username =>
         put {
           entity(as[User]) { user =>
-            onComplete(userService.update(username, user))(successHandler orElse failureHandler)
+            onComplete(userService.update(username, user))(successHandler orElse userOpFailureHandler orElse failureHandler)
           }
         }
       } ~
       path("users" / Segment) { username =>
-        delete(onComplete(userService.delete(username))(successHandler orElse failureHandler))
+        delete(onComplete(userService.delete(username))(successHandler orElse userOpFailureHandler orElse failureHandler))
       }
 
   }

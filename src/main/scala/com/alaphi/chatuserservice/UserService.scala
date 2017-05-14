@@ -4,29 +4,33 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class UserService(implicit ec: ExecutionContext) {
 
-  def create(userCreation: UserCreation): Future[User] = {
+  def create(userCreation: UserCreation): Future[Either[UserOperationFailure, User]] = {
     Future.successful(
-      User(
-        username = userCreation.username,
-        forename = userCreation.forename,
-        surname = userCreation.surname
+      Right(
+        User(
+          username = userCreation.username,
+          forename = userCreation.forename,
+          surname = userCreation.surname
+        )
       )
     )
   }
 
-  def read(username: String): Future[User] = {
+  def read(username: String): Future[Either[UserOperationFailure, User]] = {
     Future.successful(
-      User(
-        username = "JJJJr",
-        forename = "Joey",
-        surname = "JoeJoe"
+      Right(
+        User(
+          username = "JJJJr",
+          forename = "Joey",
+          surname = "JoeJoe"
+        )
       )
     )
   }
 
-  def update(username: String, user: User): Future[User] = {
+  def update(username: String, user: User): Future[Either[UserOperationFailure, User]] = {
     Future.successful(
-      user
+      Right(user)
     )
   }
 
