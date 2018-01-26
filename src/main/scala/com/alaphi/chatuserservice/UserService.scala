@@ -1,47 +1,40 @@
 package com.alaphi.chatuserservice
 
-import scala.concurrent.{ExecutionContext, Future}
+trait UserServiceComponent[M[_]] {
 
-class UserService(implicit ec: ExecutionContext) {
+  def userService: UserService
 
-  def create(userCreation: UserCreation): Future[Either[UserOperationFailure, User]] = {
-    Future.successful(
-      Right(
-        User(
-          username = userCreation.username,
-          forename = userCreation.forename,
-          surname = userCreation.surname
-        )
-      )
-    )
-  }
+  trait UserService {
+    def create(userCreation: UserCreation): M[User]
 
-  def read(username: String): Future[Either[UserOperationFailure, User]] = {
-    Future.successful(
-      Right(
-        User(
-          username = "JJJJr",
-          forename = "Joey",
-          surname = "JoeJoe"
-        )
-      )
-    )
-  }
+    def read(username: String): M[User]
 
-  def update(username: String, user: User): Future[Either[UserOperationFailure, User]] = {
-    Future.successful(
-      Right(user)
-    )
-  }
+    def update(username: String, user: User): M[User]
 
-  def delete(username: String): Future[Boolean] = {
-    Future.successful(
-      true
-    )
+    def delete(username: String): M[Boolean]
   }
 
 }
 
-object UserService {
-  def apply()(implicit ec: ExecutionContext): UserService = new UserService
+trait UserServiceImplComponent[M[_]] extends UserServiceComponent[M] {
+  this: UserRepositoryComponent[M] =>
+
+  class UserServiceImpl extends UserService {
+    def create(userCreation: UserCreation): M[User] = {
+      userRepository.create(userCreation)
+    }
+
+    def read(username: String): M[User] = {
+      userRepository.read(username)
+    }
+
+    def update(username: String, user: User): M[User] = {
+      userRepository.update(username, user)
+    }
+
+    def delete(username: String): M[Boolean] = {
+      userRepository.delete(username)
+    }
+  }
+
 }

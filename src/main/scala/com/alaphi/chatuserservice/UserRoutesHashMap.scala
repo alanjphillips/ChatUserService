@@ -10,8 +10,8 @@ import io.circe.generic.auto._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
-trait UserRoutes {
-  this: UserServiceComponent[Future] =>
+trait UserRoutesHashMap {
+  this: UserServiceComponent[Option] =>
 
   implicit def ec: ExecutionContext
 
@@ -30,27 +30,26 @@ trait UserRoutes {
   }
 
   val routes = {
-    path("users") {
+    path("optusers") {
       post {
         entity(as[UserCreation]) { userCreation =>
-          onComplete(userService.create(userCreation))(successHandler orElse userOpFailureHandler orElse failureHandler)
+          onComplete {
+            userService.create(userCreation) match {
+              case Some(res) => Future.successful(res)
+              case None => Future.failed(new Exception("create failed"))
+            }
+          }(successHandler orElse userOpFailureHandler orElse failureHandler)
         }
       }
     } ~
-      path("users" / Segment) { username =>
-        get(onComplete(userService.read(username))(successHandler orElse userOpFailureHandler orElse failureHandler))
-      } ~
-      path("users" / Segment) { username =>
-        put {
-          entity(as[User]) { user =>
-            onComplete(userService.update(username, user))(successHandler orElse userOpFailureHandler orElse failureHandler)
+      path("optusers" / Segment) { username =>
+        get(onComplete {
+          userService.read(username) match {
+            case Some(res) => Future.successful(res)
+            case None => Future.failed(new Exception("read failed"))
           }
-        }
-      } ~
-      path("users" / Segment) { username =>
-        delete(onComplete(userService.delete(username))(successHandler orElse userOpFailureHandler orElse failureHandler))
+        }(successHandler orElse userOpFailureHandler orElse failureHandler))
       }
   }
-
 }
 

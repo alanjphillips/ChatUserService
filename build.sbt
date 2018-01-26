@@ -26,6 +26,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka"         %% "akka-stream"            % akkaVersion,
   "com.typesafe.akka"         %% "akka-http"              % akkaHttpVersion,
   "com.typesafe.akka"         %% "akka-http-testkit"      % akkaHttpVersion,
+  "com.lightbend.akka"        %% "akka-stream-alpakka-cassandra" % "0.9",
   "org.mockito"               %  "mockito-core"           % mockitoVersion,
   "org.scalatest"             %% "scalatest"              % scalaTestVersion     % "test"
 )
