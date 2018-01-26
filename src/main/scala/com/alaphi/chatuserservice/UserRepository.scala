@@ -1,6 +1,7 @@
 package com.alaphi.chatuserservice
 
 import scala.concurrent.Future
+import scala.util.Try
 
 
 trait UserRepositoryComponent[M[_]] {
@@ -83,6 +84,40 @@ trait UserRepositoryHashMapComponent extends UserRepositoryComponent[Option] {
 
     def delete(username: String): Some[Boolean] = {
       Some(true)
+    }
+  }
+
+}
+
+trait UserRepositorySyncComponent extends UserRepositoryComponent[Try] {
+
+  class UserRepositorySync extends UserRepository {
+    def create(userCreation: UserCreation): Try[User] = {
+      Try(
+        User(
+          username = userCreation.username,
+          forename = userCreation.forename,
+          surname = userCreation.surname
+        )
+      )
+    }
+
+    def read(username: String): Try[User] = {
+      Try(
+        User(
+          username = "wwwww",
+          forename = "eeeee",
+          surname = "rrrrr"
+        )
+      )
+    }
+
+    def update(username: String, user: User): Try[User] = {
+      Try(user)
+    }
+
+    def delete(username: String): Try[Boolean] = {
+      Try(true)
     }
   }
 
