@@ -8,26 +8,28 @@ import de.heikoseeberger.akkahttpcirce.CirceSupport._
 import io.circe.generic.auto._
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 trait UserRoutesHashMap {
   this: UserServiceComponent[Option] =>
 
   implicit def ec: ExecutionContext
 
-  val successHandler: PartialFunction[Any, StandardRoute] = {
+  val successHandler: PartialFunction[Try[_], StandardRoute] = {
     case Success(user: User) => complete(OK -> user)
     case Success(true)       => complete(OK -> true)
   }
 
-  val userOpFailureHandler: PartialFunction[Any, StandardRoute] = {
+  val userOpFailureHandler: PartialFunction[Try[_], StandardRoute] = {
     case Success(uof: UserOperationFailure) => complete(BadRequest -> uof)
     case Success(false)                     => complete(BadRequest -> false)
   }
 
-  val failureHandler: PartialFunction[Any, StandardRoute] = {
+  val failureHandler: PartialFunction[Try[_], StandardRoute] = {
     case Failure(f) => complete(BadRequest -> f)
   }
+
+  val responseHandler: PartialFunction[Try[_], StandardRoute] = successHandler orElse userOpFailureHandler orElse failureHandler
 
   val routes = {
     path("optusers") {
@@ -38,7 +40,7 @@ trait UserRoutesHashMap {
               case Some(res) => Future.successful(res)
               case None => Future.failed(new Exception("create failed"))
             }
-          }(successHandler orElse userOpFailureHandler orElse failureHandler)
+          }(responseHandler)
         }
       }
     } ~
@@ -48,7 +50,7 @@ trait UserRoutesHashMap {
             case Some(res) => Future.successful(res)
             case None => Future.failed(new Exception("read failed"))
           }
-        }(successHandler orElse userOpFailureHandler orElse failureHandler))
+        }(responseHandler))
       }
   }
 }

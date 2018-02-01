@@ -15,19 +15,21 @@ trait UserRoutesSync {
 
   implicit def ec: ExecutionContext
 
-  val successHandler: PartialFunction[Any, StandardRoute] = {
+  val successHandler: PartialFunction[Try[_], StandardRoute] = {
     case Success(user: User) => complete(OK -> user)
     case Success(true)       => complete(OK -> true)
   }
 
-  val userOpFailureHandler: PartialFunction[Any, StandardRoute] = {
+  val userOpFailureHandler: PartialFunction[Try[_], StandardRoute] = {
     case Success(uof: UserOperationFailure) => complete(BadRequest -> uof)
     case Success(false)                     => complete(BadRequest -> false)
   }
 
-  val failureHandler: PartialFunction[Any, StandardRoute] = {
+  val failureHandler: PartialFunction[Try[_], StandardRoute] = {
     case Failure(f) => complete(BadRequest -> f)
   }
+
+  val responseHandler: PartialFunction[Try[_], StandardRoute] = successHandler orElse userOpFailureHandler orElse failureHandler
 
   val routes = {
     path("syncusers") {
@@ -38,7 +40,7 @@ trait UserRoutesSync {
               case Success(res) => Future.successful(res)
               case Failure(e) => Future.failed(e)
             }
-          }(successHandler orElse userOpFailureHandler orElse failureHandler)
+          }(responseHandler)
         }
       }
     } ~
@@ -48,7 +50,7 @@ trait UserRoutesSync {
             case Success(res) => Future.successful(res)
             case Failure(e) => Future.failed(e)
           }
-        }(successHandler orElse userOpFailureHandler orElse failureHandler))
+        }(responseHandler))
       }
   }
 }
